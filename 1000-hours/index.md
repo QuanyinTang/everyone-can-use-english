@@ -16,15 +16,14 @@ hero:
       link: /training-tasks/kick-off
     - theme: brand
       text: 语音塑造
-      link: /sounds-of-english/01-basics
+      link: /sounds-of-american-english/0-intro
     - theme: brand
       text: 大脑内部
       link: /in-the-brain/01-inifinite
     - theme: brand
       text: 自我训练
       link: /self-training/00-intro
-    # - theme: alt
-    #   text: API Examples
-    #   link: /api-examples
-
-
+    - theme: alt
+      text: Enjoy App
+      link: /enjoy-app/
+---

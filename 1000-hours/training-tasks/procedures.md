@@ -1,54 +1,55 @@
 # 2. 训练方法
 
-请后继反复认真阅读《[语音塑造](/sounds-of-english/01-basics)》中的每一个章节。
+请后续反复认真阅读《[语音塑造](/sounds-of-american-english/0-intro)》中的每一个章节。
 
-## 2.1 搞清每个单词的读音
+## 2.1. 搞清每个单词的读音
 
 在挣扎着**读准**之前，**首先要避免读错**。这只是一个习惯，遇到任何不确定的词汇都要查词典 —— 当然，在有各种辅助工具的情况下（[GPT: Phonetic Transcriber](https://chat.openai.com/g/g-nWwuxUVqO-phonetic-transcriber)），甚至可以整句查询音标。
 
-忘文生音非常可怕。我曾经在很多年里把 *facade* 读成 `/ˈfækeɪd/` （其实是 `/fəˈsɑːd/`<span class="speak-word-inline" data-audio-uk="/audios/facade-uk.mp3" data-audio-us="/audios/facade-us.mp3"></span>）把 *specific* 读成 `/ˈspesɪfɪk/` （其实是 `/spəˈsɪfɪk/`<span class="speak-word-inline" data-audio-uk="/audios/specific-uk.mp3" data-audio-us="/audios/specific-us.mp3"></span>）…… 
+望文生音非常可怕。我曾经在很多年里把 *facade* 读成 <span class="pho alt">ˈfækeɪd</span> —— 其实是 <span class="pho alt">fəˈsɑːd</span><span class="speak-word-inline" data-audio-us-male="/audios/facade-us-male.mp3" data-audio-us-femail="/audios/facade-us-female.mp3"></span>）；我也曾把 *specific* 读成 <span class="pho alt">ˈspesɪfɪk</span> —— 其实是 <span class="pho alt">spəˈsɪfɪk</span><span class="speak-word-inline" data-audio-us-male="/audios/specific-us-male.mp3" data-audio-us-female="/audios/specific-us-female.mp3"></span>）…… 不妨再猜猜 *plaid* 这个词怎么读？我在很长一段时间里误以为是 <span class="pho alt">pleɪd</span> …… 后来才发现并非如此 —— 其实是 <span class="pho alt">plæd</span> <span class="speak-word-inline" data-audio-us-male="/audios/plaid-us-male.mp3" data-audio-us-female="/audios/plaid-us-female.mp3"></span>。
 
 如果不养成这个习惯，那么读错的单词会越来越多，等于时时刻刻在为自己的牢墙添砖加瓦，到最后再也无法逃脱 —— Github 上有个[常见中国程序员发音错误的单词列表](https://github.com/shimohq/chinese-programmer-wrong-pronunciation)，不妨去看看，当作自己的警钟。
 
 遇到自己不熟悉发音的词汇，要单独反复大声朗读，直至自己的舌头和嘴唇都协调得非常轻松自然。每个人遇到的困难不一样。比如，Instagram 上就有个人[演示](https://www.instagram.com/reel/C1VmSpuIvTO/?igsh=czY3cDAzcGIxMGN4)过自己 *literally* 这个单词死活读不明白的尴尬<span class="speak-word-inline" data-audio-uk="/audios/literally-instagram.mp3"></span> —— 不过，这恰恰就是在自己的大脑里**新建连接新建网络**所要面临的困难，要通过练习克服的就是这个困难，并且还要通过短时间内足量重复把**新连接新网络**强化到**原有近似连接近似网络**无法竞争的地步……
 
-## 2.2 放慢播放速度仔细听
+## 2.2. 放慢播放速度仔细听
 
-要慢速听**很多遍**。从 2 大层面总计 7 个方面分别去分析，详情参见《[语音塑造：进阶](/sounds-of-english/29-advanced)》：
+要慢速听**很多遍**。从 2 大层面总计 7 个方面分别去分析，详情参见《[语音塑造](/sounds-of-american-english/0-intro)》：
 
 > * 韵律节奏
->   * 停顿（[3.2](/sounds-of-english/31-pause)）
->   * 高低（[3.3](/sounds-of-english/32-high-low)）
->   * 轻重（[3.4](/sounds-of-english/33-up-down)）
->   * 起伏（[3.5](/sounds-of-english/34-strong-weak)）
->   * 缓急（[3.6](/sounds-of-english/35-fast-slow)）
+>   * 停顿（[4.2](/sounds-of-american-english/4.3-grouping#_4-2-1-意群)）
+>   * 高低（[4.5.4](/sounds-of-american-english/4.5-sentences#_4-5-4-音高变化)）
+>   * 起伏（[4.5.5](/sounds-of-american-english/4.5-sentences#_4-5-5-声调变化)）
+>   * 轻重（[4.5.3](/sounds-of-american-english/4.5-sentences#_4-5-3-强读式与弱读式的区别)）
+>   * 缓急（[4.5.6](/sounds-of-american-english/4.5-sentences#_4-5-6-语速)）
 > * 音素变化
->   * 元音（[2.1](/sounds-of-english/03-vowels-overview)）
->   * 辅音（[2.2](/sounds-of-english/12-consonants-overview)）
+>   * 元音（[3.1](/sounds-of-american-english/3.1-vowels)）
+>   * 辅音（[3.2](/sounds-of-american-english/3.2-consonants)）
 
-**仔细听**的意思是说，按照以上的顺序，逐条分析，直至每个**音素**都认真分析过、认真体会过、认真尝试过。这一步最需要**注意力集中**，也是整个训练中最关键的部分 —— 这场训练，从另外一个角度来看，全部都是**注意力训练**。
+**仔细听**的意思是说，按照以上的顺序，逐条分析，直至每个**音素**都认真分析过、认真体会过、认真尝试过。这一步最需要**注意力集中**，也是整个训练中最关键的部分 —— 这场训练，从另外一个角度来看，实际上都是**注意力训练**。
 
 如果这一点没做到、没做好的话，就会出现 “**明明听到的是一回事，脑子里反应的却是另外一回事**”。
 
-比如，假设过去你一直习惯于把 *recent* `/ˈrisənt/` 里的 `/s/` 读成了 `/z/`，而后在这一步中你并没有做到**仔细听并分析到音素级别**的话…… 那么接下来弄不好无论听多少遍，无论跟读多少遍，你都有可能依然**无法发现**你有一个音竟然读错了 —— 你的大脑会固执地用原有的连接和网络，乃至于自己毫无察觉。如果有人提醒，你会感觉特别奇怪，感觉上那么**明显**的差异，自己怎么就**竟然**一直没注意到？
+比如，假设过去你一直习惯于把 *recent* <span class="pho alt">ˈrisənt</span> 里的 <span class="pho alt">s</span> 读成了 <span class="pho alt">z</span>，而后在这一步中你并没有做到**仔细听并分析到音素级别**的话…… 那么接下来弄不好无论听多少遍，无论跟读多少遍，你都有可能依然**无法发现**你有一个音竟然读错了 —— 你的大脑会固执地用原有的连接和网络，乃至于自己毫无察觉。如果有人提醒，你会感觉特别奇怪，感觉上那么**明显**的差异，自己怎么就**竟然**一直没注意到？这里有个示例，<span class="speak-word-inline" data-audio-other="/audios/recent-z.mp3"></span>（*recent health tips*）—— 这是某位同学被发现之前完全没有意识到的错误。
 
 在这一步，每个单词都可以跟读一下，通过试验感觉自己的声音，认真找自己需要调整的地方。
 
 在最初尚不熟悉的时候，可以把文本和音标打印出来，在纸上用笔做各种标记。
 
-> * 用 `|` 标注**可换气停顿**，用 `·` 标注**非换气停顿**；
-> * 在**音高**（*pitch*）被拔高的音节上标注一个 `^`；
+> * 用 <span class="pho">|</span> 标注**可换气停顿**，用 <span class="pho">·</span> 标注**非换气停顿**；
+> * 在**音高**（*pitch*）被拔高的音节上标注一个 <span class="pho">^</span>；
 > * 在**重读**的单词可用加重字体作为标注；
 > * 需要读长的**元音**在下面或者上面画一段直线；
-> * 用箭头标注**声调**，比如，`→`、`↗` 或 `↘`；
-> * 在**连起来读得很快的几个词汇**下画波浪线；
+> * 在必要的重读音节的元音上标注**声调**，<span class="pho">◌̅, ◌́, ◌̀</span>
+> * **连读**用 <span class="pho">◌‿◌</span> 符号做出标记
+> * 在**读得很快的几个词汇**下画波浪线；
 > * 格外需要注意并调整的**音素**，引出一个箭头之后写上各种必要的笔记……
 
-这一步的仔细分析很重要，是后面所有练习步骤的必要前提。
+这一步的仔细分析很重要，是后面所有练习步骤的必要前提。请注意，这一步分析，弄上半小时甚至一小时都不过分…… 因为**你不知道的你就注意不到**。
 
 ## 2.3. 分段跟读
 
-这和我们练琴特别像。刚开始的时候，人家弹得轻松听着优美，我们自己的手指干脆不听话，笨得跟脚趾似的…… 
+这和我们练琴特别像。刚开始的时候，人家弹得轻松听着优美，我们自己的手指干脆不听话，笨得跟脚趾似的……
 
 <video controls><source src="/videos/hc-gt-normal.mp4"></source></video>
 
@@ -56,11 +57,11 @@
 
 <video controls><source src="/videos/hc-gt-slow.mp4"></source></video>
 
- 可即便放慢速度了也不行…… 于是，只能一小节一小节地练，练熟了一小节再去练下一小节，两个都练熟了之后吧，还得拼起来重复很多遍才能做到两个小节之间衔接自然…… 如此这般，一小节一小节地终于 “**爬**” 完之后，才算有资格可以进行**正式练习**了……
+ 可即便放慢速度了也不行…… 于是，只能一小节一小节地练，练熟了一小节再去练下一小节，两个小节都练熟了之后吧，还得拼起来重复很多遍才能做到两个小节之间衔接自然…… 如此这般，一小节一小节地终于 “**爬**” 完之后，才算有资格可以进行**正式练习**了……
 
-自然语音中有**可换气停顿**的地方，就相当于是乐谱里的小节分界线。分段练习，实在难的小节，还可以继续拆分……
+自然语音中有**暂停**（*pause*）的地方，就相当于是乐谱里的小节分界线。分段练习，实在难的小节，还可以继续拆分……
 
-在跟读的时候，有必要**夸张**一点**。声音也要正常地大** —— 确实不用喊，嗓子的确需要保护。实际上，我们主要需要练的是嘴唇、舌头、气流震动的配合，主要练的还真不是声带。
+在跟读的时候，有必要**夸张**一点。声音也要正常地**大** —— 确实不用喊，嗓子的确需要保护。实际上，我们主要需要练的是嘴唇、舌头、气流振动的配合，主要练的还真不是声带。
 
 跟读的时候，可以戴着耳机。一个比较好的方法是戴单只耳机 —— 这样，一方面录音听得更清楚，另外一方面也不妨碍听清自己的声音，还可以换着耳朵戴。
 
@@ -70,7 +71,7 @@
 
 大家都一样，刚开始的时候就是很吃力，就是很生硬 —— 并且，这种笨拙必然要持续相当长一段时间…… 哪怕感觉上已经熟练，还是需要继续练习的 —— 做什么都一样。
 
-TED 上有一个讲座，Benjamin Zander 讲 [The transformative power of classical music](https://www.ted.com/talks/benjamin_zander_the_transformative_power_of_classical_music/transcript?language=en)，提到说 “没有人是音盲（*tune deaf*）” 所以每个人都可以练习演奏 —— 这很重要…… 不过，值得你在这里听听的是他模仿了不同时期孩子弹钢琴的情况，从生硬到熟练…… 
+TED 上有一个讲座，Benjamin Zander 讲 [The transformative power of classical music](https://www.ted.com/talks/benjamin_zander_the_transformative_power_of_classical_music/transcript?language=en)，提到说 “没有人是音盲（*tune deaf*）” 所以每个人都可以练习演奏 —— 这很重要…… 不过，值得你在这里听听的是他模仿了不同时期孩子弹钢琴的情况，从生硬到熟练……
 
 <audio controls><source src="/audios/benjamin-zander-on-kids-playing-piano.mp3"></source></audio>
 
@@ -118,4 +119,4 @@ TED 上有一个讲座，Benjamin Zander 讲 [The transformative power of classi
 
 一天至少三个小时，每周最多可以中止一天。
 
-每天结束之前，要花 5～10 分钟做一下**复盘**，回忆并记录一下自己今天遇到的困难、已经克服的困难，尚未克服的困难，以及面对那些困难时所采用的方法…… 想一想还有什么方法可以试试？这些都要写下来。相信我，记录这个东西 ，总是会以想象不到的方式起想象不到的作用。
+每天结束之前，要花 5～10 分钟做一下**复盘**，回忆并记录一下自己今天遇到的困难、已经克服的困难、尚未克服的困难、以及面对那些困难时所采用的方法…… 想一想还有什么方法可以试试？这些都要写下来。相信我，记录这个东西 ，总是会以想象不到的方式起想象不到的作用。

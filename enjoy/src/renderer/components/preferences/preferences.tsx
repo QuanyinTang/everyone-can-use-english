@@ -2,21 +2,30 @@ import { t } from "i18next";
 import { Button, ScrollArea, Separator } from "@renderer/components/ui";
 import {
   About,
+  ApiUrlSettings,
+  Appearance,
   DefaultEngineSettings,
   Hotkeys,
   UserSettings,
   BalanceSettings,
-  LanguageSettings,
   LibrarySettings,
-  WhisperSettings,
+  SttSettings,
+  TtsSettings,
   OpenaiSettings,
   ProxySettings,
-  GoogleGenerativeAiSettings,
   ResetSettings,
   ResetAllSettings,
+  NativeLanguageSettings,
+  LearningLanguageSettings,
+  NetworkState,
+  RecorderSettings,
+  VocabularySettings,
+  DictSettings,
+  DiskUsage,
 } from "@renderer/components";
 import { useState } from "react";
 import { Tooltip } from "react-tooltip";
+import { EmailSettings } from "./email-settings";
 
 export const Preferences = () => {
   const TABS = [
@@ -28,15 +37,30 @@ export const Preferences = () => {
           <div className="font-semibold mb-4 capitilized">
             {t("basicSettings")}
           </div>
-          <LibrarySettings />
+          <NativeLanguageSettings />
           <Separator />
-          <WhisperSettings />
+          <LearningLanguageSettings />
+          <Separator />
+          <SttSettings />
+          <Separator />
+          <TtsSettings />
           <Separator />
           <DefaultEngineSettings />
           <Separator />
-          <OpenaiSettings />
+        </div>
+      ),
+    },
+    {
+      value: "dict",
+      label: t("dictSettingsShort"),
+      component: () => (
+        <div className="pr-1">
+          <div className="font-semibold mb-4 capitilized">
+            {t("dictSettings")}
+          </div>
+          <VocabularySettings />
           <Separator />
-          <GoogleGenerativeAiSettings />
+          <DictSettings />
           <Separator />
         </div>
       ),
@@ -49,7 +73,15 @@ export const Preferences = () => {
           <div className="font-semibold mb-4 capitilized">
             {t("advancedSettings")}
           </div>
+          <ApiUrlSettings />
+          <Separator />
           <ProxySettings />
+          <Separator />
+          <NetworkState />
+          <Separator />
+          <OpenaiSettings />
+          <Separator />
+          <RecorderSettings />
           <Separator />
           <ResetSettings />
           <Separator />
@@ -68,9 +100,13 @@ export const Preferences = () => {
           </div>
           <UserSettings />
           <Separator />
-          <BalanceSettings />
+          <LibrarySettings />
           <Separator />
-          <LanguageSettings />
+          <DiskUsage />
+          <Separator />
+          <EmailSettings />
+          <Separator />
+          <BalanceSettings />
           <Separator />
         </div>
       ),
@@ -79,6 +115,11 @@ export const Preferences = () => {
       value: "hotkeys",
       label: t("hotkeys"),
       component: () => <Hotkeys />,
+    },
+    {
+      value: "appearance",
+      label: t("appearance"),
+      component: () => <Appearance />,
     },
     {
       value: "about",

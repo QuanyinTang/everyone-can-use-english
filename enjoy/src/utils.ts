@@ -1,7 +1,16 @@
 import Pitchfinder from "pitchfinder";
+import { IPA_CONSONANTS, IPA_MAPPINGS, IPA_VOWELS } from "./constants";
 
-export function generatePitch(peaks: Float32Array, sampleRate: number) {
-  const detectPitch = Pitchfinder.YIN({ sampleRate });
+export const extractFrequencies = (props: {
+  peaks: Float32Array;
+  sampleRate: number;
+}): number[] => {
+  const { peaks, sampleRate } = props;
+
+  const detectPitch = Pitchfinder.AMDF({
+    sampleRate,
+    sensitivity: 0.05,
+  });
   const duration = peaks.length / sampleRate;
   const bpm = peaks.length / duration / 60;
 
@@ -10,85 +19,136 @@ export function generatePitch(peaks: Float32Array, sampleRate: number) {
     quantization: bpm,
   });
 
-  // Find the baseline frequency (the value that appears most often)
-  const frequencyMap: any = {};
-  let maxAmount = 0;
-  let baseFrequency = 0;
-  frequencies.forEach((frequency) => {
-    if (!frequency) return;
-    const tolerance = 10;
-    frequency = Math.round(frequency * tolerance) / tolerance;
-    if (!frequencyMap[frequency]) frequencyMap[frequency] = 0;
-    frequencyMap[frequency] += 1;
-    if (frequencyMap[frequency] > maxAmount) {
-      maxAmount = frequencyMap[frequency];
-      baseFrequency = frequency;
+  const cleanedFrequencies = removeNoise(frequencies);
+
+  return cleanedFrequencies;
+};
+
+export const removeNoise = (
+  numbers: number[],
+  threshold: number = 0.2
+): number[] => {
+  numbers.forEach((num, i) => {
+    if (i === 0) return;
+    if (typeof num !== "number") return;
+
+    const prevNum = numbers[i - 1] || num;
+    const nextNum = numbers[i + 1] || num;
+    const avgNeighbor = (prevNum + nextNum) / 2.0;
+    const deviation = Math.abs(num - avgNeighbor);
+
+    if (deviation > threshold * avgNeighbor) {
+      numbers[i] = null;
     }
   });
 
-  return { frequencies, baseFrequency };
-}
+  return numbers;
+};
 
 export function milisecondsToTimestamp(ms: number) {
   const hours = Math.floor(ms / 3600000).toString();
   const minutes = Math.floor((ms % 3600000) / 60000).toString();
   const seconds = Math.floor(((ms % 360000) % 60000) / 1000).toString();
-  const milliseconds = Math.floor(((ms % 360000) % 60000) % 1000).toString();
+  const milliseconds = Math.floor(ms % 1000).toString();
   return `${hours.padStart(2, "0")}:${minutes.padStart(
     2,
     "0"
   )}:${seconds.padStart(2, "0")},${milliseconds}`;
 }
 
-export const MAGIC_TOKENS = ["Mrs.", "Ms.", "Mr.", "Dr.", "Prof.", "St."];
-export const END_OF_WORD_REGEX = /[^\.!,\?][\.!\?]/g;
-export const groupTranscription = (
-  transcription: TranscriptionResultSegmentType[]
-): TranscriptionResultSegmentGroupType[] => {
-  const generateGroup = (group?: TranscriptionResultSegmentType[]) => {
-    if (!group || group.length === 0) return;
+export const convertWordIpaToNormal = (
+  ipas: string[],
+  options?: { mappings?: any }
+): string[] => {
+  const { mappings = IPA_MAPPINGS } = options || {};
+  const consonants = Object.keys(IPA_CONSONANTS)
+    .map((key) => IPA_CONSONANTS[key])
+    .reduce((acc, val) => acc.concat(val), []);
+  const consonantsRegex = new RegExp(`^(\ˈ|ˌ)?` + consonants.join("|"));
+  const vowels = Object.keys(IPA_VOWELS)
+    .map((key) => IPA_VOWELS[key])
+    .reduce((acc, val) => acc.concat(val), []);
+  const vowelsRegex = new RegExp(`^(\ˈ|ˌ)?` + vowels.join("|"));
 
-    const firstWord = group[0];
-    const lastWord = group[group.length - 1];
+  const converted: string[] = [];
 
-    return {
-      offsets: {
-        from: firstWord.offsets.from,
-        to: lastWord.offsets.to,
-      },
-      text: group.map((w) => w.text.trim()).join(" "),
-      timestamps: {
-        from: firstWord.timestamps.from,
-        to: lastWord.timestamps.to,
-      },
-      segments: group,
-    };
-  };
+  // convert each ipa to normal
+  // if ipa is a vowel and marked, check if the previous ipa is a consonant,
+  // if so, mark the consonant instead
+  for (let i = 0; i < ipas.length; i++) {
+    const ipa = ipas[i];
+    converted.push(convertIpaToNormal(ipa, { mappings, marked: false }));
 
-  const groups: TranscriptionResultSegmentGroupType[] = [];
-  let group: TranscriptionResultSegmentType[] = [];
+    const isVowel = vowelsRegex.test(ipa);
+    const mark = ipa.match(/(\ˈ|ˌ)/);
 
-  transcription.forEach((segment) => {
-    const text = segment.text.trim();
-    if (!text) return;
-
-    group.push(segment);
-
-    if (
-      !MAGIC_TOKENS.includes(text) &&
-      segment.text.trim().match(END_OF_WORD_REGEX)
-    ) {
-      // Group a complete sentence;
-      groups.push(generateGroup(group));
-
-      // init a new group
-      group = [];
+    let j = i - 1;
+    for (; j > 0 && j > i - 2; j--) {
+      if (
+        consonantsRegex.test(converted[j]) &&
+        !IPA_CONSONANTS.trill.includes(converted[j]) &&
+        !IPA_CONSONANTS.approximant.includes(converted[j]) &&
+        !IPA_CONSONANTS.lateralApproximant.includes(converted[j])
+      )
+        break;
+      if (
+        consonantsRegex.test(converted[j]) &&
+        !consonantsRegex.test(converted[j - 1])
+      ) {
+        break;
+      }
     }
-  });
 
-  // Group the last group
-  const lastSentence = generateGroup(group);
-  if (lastSentence) groups.push(lastSentence);
+    if (isVowel && mark) {
+      if (converted[j] && consonantsRegex.test(converted[j])) {
+        converted[j] = mark[0] + converted[j];
+      } else {
+        converted[i] = mark[0] + converted[i];
+      }
+    }
+  }
 
-  return groups;
+  return converted;
 };
+
+export const convertIpaToNormal = (
+  ipa: string,
+  options?: { mappings?: any; marked?: boolean }
+): string => {
+  const { mappings = IPA_MAPPINGS, marked = false } = options || {};
+
+  const mark = ipa.match(/(\ˈ|ˌ)/);
+  const cleanIpa = ipa.replace(mark ? mark[0] : "", "");
+
+  const converted = mappings[cleanIpa] || cleanIpa;
+  if (mark && marked) {
+    return `${mark[0]}${converted}`;
+  } else {
+    return converted;
+  }
+};
+
+// make size of bytes human readable
+export const humanFileSize = (bytes: number, si: boolean = false) => {
+  const thresh = si ? 1000 : 1024;
+  if (Math.abs(bytes) < thresh) {
+    return bytes + " B";
+  }
+  const units = si
+    ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+    : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+  let u = -1;
+  const r = 10;
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (
+    Math.round(Math.abs(bytes) * r) / r >= thresh &&
+    u < units.length - 1
+  );
+  return bytes.toFixed(1) + " " + units[u];
+};
+
+export function getExtension(filename: string, defaultExt: string) {
+  return /(?:\.([^.]+))?$/.exec(filename)[1] || defaultExt;
+}
