@@ -1,7 +1,10 @@
 type AudioType = {
+  mediaType: string,
   id: string;
   source: string;
   name: string;
+  filename: string;
+  language?: string;
   description?: string;
   src?: string;
   coverUrl?: string;

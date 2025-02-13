@@ -11,11 +11,21 @@ import Audios from "./pages/audios";
 import Videos from "./pages/videos";
 import Stories from "./pages/stories";
 import Story from "./pages/story";
-import Books from "./pages/books";
+import Documents from "./pages/documents";
+import Document from "./pages/document";
 import Profile from "./pages/profile";
+import User from "./pages/user";
 import Home from "./pages/home";
 import Community from "./pages/community";
 import StoryPreview from "./pages/story-preview";
+import Notes from "./pages/notes";
+import PronunciationAssessmentsIndex from "./pages/pronunciation-assessments/index";
+import PronunciationAssessmentsNew from "./pages/pronunciation-assessments/new";
+import Courses from "./pages/courses/index";
+import Course from "./pages/courses/show";
+import Chapter from "./pages/courses/chapter";
+import Chats from "./pages/chats";
+import { ProtectedPage } from "./pages/protected-page";
 
 export default createHashRouter([
   {
@@ -23,60 +33,191 @@ export default createHashRouter([
     element: <Layout />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <Home /> },
+      { path: "/landing", element: <Landing /> },
+      {
+        index: true,
+        element: (
+          <ProtectedPage>
+            <Home />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/chats",
+        element: (
+          <ProtectedPage>
+            <Chats />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/courses",
+        element: (
+          <ProtectedPage>
+            <Courses />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/courses/:id",
+        element: (
+          <ProtectedPage>
+            <Course />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/courses/:id/chapters/:sequence",
+        element: (
+          <ProtectedPage>
+            <Chapter />
+          </ProtectedPage>
+        ),
+      },
       {
         path: "/community",
-        element: <Community />,
+        element: (
+          <ProtectedPage>
+            <Community />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/users/:id",
+        element: (
+          <ProtectedPage>
+            <User />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/profile",
-        element: <Profile />,
+        element: (
+          <ProtectedPage>
+            <Profile />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/conversations",
-        element: <Conversations />,
+        element: (
+          <ProtectedPage>
+            <Conversations />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/conversations/:id",
-        element: <Conversation />,
+        element: (
+          <ProtectedPage>
+            <Conversation />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/pronunciation_assessments",
+        element: (
+          <ProtectedPage>
+            <PronunciationAssessmentsIndex />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/pronunciation_assessments/new",
+        element: (
+          <ProtectedPage>
+            <PronunciationAssessmentsNew />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/vocabulary",
-        element: <Vocabulary />,
+        element: (
+          <ProtectedPage>
+            <Vocabulary />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/audios",
-        element: <Audios />,
+        element: (
+          <ProtectedPage>
+            <Audios />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/audios/:id",
-        element: <Audio />,
+        element: (
+          <ProtectedPage>
+            <Audio />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/videos",
-        element: <Videos />,
+        element: (
+          <ProtectedPage>
+            <Videos />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/videos/:id",
-        element: <Video />,
+        element: (
+          <ProtectedPage>
+            <Video />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/documents",
+        element: (
+          <ProtectedPage>
+            <Documents />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/documents/:id",
+        element: (
+          <ProtectedPage>
+            <Document />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/stories",
-        element: <Stories />,
+        element: (
+          <ProtectedPage>
+            <Stories />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/stories/:id",
-        element: <Story />,
-      },
-      {
-        path: "/books",
-        element: <Books />,
+        element: (
+          <ProtectedPage>
+            <Story />
+          </ProtectedPage>
+        ),
       },
       {
         path: "/stories/preview/:uri",
-        element: <StoryPreview />,
+        element: (
+          <ProtectedPage>
+            <StoryPreview />
+          </ProtectedPage>
+        ),
+      },
+      {
+        path: "/notes",
+        element: (
+          <ProtectedPage>
+            <Notes />
+          </ProtectedPage>
+        ),
       },
     ],
   },
-  { path: "/landing", element: <Landing /> },
 ]);

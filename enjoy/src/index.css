@@ -37,6 +37,7 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 240 10% 3.9%;
+    --active-word: 201 94% 86%;
 
     --radius: 0.5rem;
   }
@@ -69,6 +70,7 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
+    --active-word: 201 93% 30%;
   }
 }
 
@@ -79,8 +81,64 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  @font-face {
+    font-family: "CharisSIL";
+    src: url("/assets/fonts/CharisSIL-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  :root {
+    --sidebar-collapsed-width: 48px;
+    --sidebar-expanded-width: 192px;
+  }
+}
+
+@layer components {
+  .scroll {
+    @apply scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary;
+  }
+  .draggable-region {
+    -webkit-app-region: drag;
+  }
+  .non-draggable-region {
+    -webkit-app-region: no-drag;
+  }
 }
 
 body {
   user-select: none;
+  :focus-visible {
+    outline: none;
+  }
+}
+
+/* make scrollbar beautiful */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f8f8f8;
+}
+::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 10px;
+}
+
+/* Dark mode styles for scrollbar */
+html.dark {
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
 }

@@ -1,12 +1,17 @@
 import { t } from "i18next";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Button,
+  ScrollArea,
+  ScrollBar,
 } from "@renderer/components/ui";
+import { Volume2Icon } from "lucide-react";
+import { memo, useEffect, useRef } from "react";
 
 export const PronunciationAssessmentWordResult = (props: {
+  src?: string;
   result: PronunciationAssessmentWordResultType;
   errorDisplay?: {
     mispronunciation: boolean;
@@ -17,7 +22,7 @@ export const PronunciationAssessmentWordResult = (props: {
     monotone: boolean;
   };
   currentTime?: number;
-  onSeek?: (time: number) => void;
+  onPlayOrigin?: () => void;
 }) => {
   const {
     result,
@@ -30,8 +35,10 @@ export const PronunciationAssessmentWordResult = (props: {
       monotone: true,
     },
     currentTime = 0,
-    onSeek,
+    onPlayOrigin,
   } = props;
+
+  const audio = useRef<HTMLAudioElement>(null);
 
   const WordDisplay = {
     None: <CorrectWordDisplay word={result.word} />,
@@ -67,71 +74,97 @@ export const PronunciationAssessmentWordResult = (props: {
     ),
   }[result.pronunciationAssessment.errorType];
 
-  return (
-    <TooltipProvider>
-      <Tooltip delayDuration={500}>
-        <TooltipTrigger>
-          <div
-            onClick={() => {
-              onSeek && onSeek(result.offset / 1e7);
-            }}
-            className="text-center"
-          >
-            <div className="">
-              {result.phonemes.map((phoneme, index) => (
-                <span
-                  key={index}
-                  className={`italic ${scoreColor(
-                    phoneme.pronunciationAssessment.accuracyScore
-                  )}`}
-                >
-                  {phoneme.phoneme}
-                </span>
-              ))}
-            </div>
-            <div
-              className={`${
-                currentTime * 1e7 >= result.offset &&
-                currentTime * 1e7 < result.offset + result.duration
-                  ? "underline"
-                  : ""
-              } underline-offset-4`}
-            >
-              {WordDisplay}
-            </div>
-          </div>
-        </TooltipTrigger>
+  const play = () => {
+    if (!audio.current || !props.src) return;
 
-        <TooltipContent>
-          {result.phonemes.length > 0 ? (
-            <>
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="font-serif">{t("score")}:</span>
-                <span className="font-serif">
-                  {result.pronunciationAssessment.accuracyScore}
-                </span>
-              </div>
-              <div className="flex items-center space-x-4">
-                {result.phonemes.map((phoneme, index) => (
-                  <div key={index} className="text-center">
-                    <div className="font-bold">{phoneme.phoneme}</div>
-                    <div className="text-sm font-serif">
-                      {phoneme.pronunciationAssessment.accuracyScore}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div>
-              {t(
-                `models.pronunciationAssessment.errors.${result.pronunciationAssessment.errorType.toLowerCase()}`
-              )}
-            </div>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    const { offset, duration } = result;
+    if (!offset || !duration) return;
+
+    const startTime = (offset * 1.0) / 1e7;
+    const endTime = ((offset + duration) * 1.0) / 1e7;
+
+    audio.current.currentTime = startTime;
+
+    // Add timeupdate listener to stop at the end of the segment
+    const handleTimeUpdate = () => {
+      if (audio.current.currentTime >= endTime) {
+        audio.current.pause();
+        audio.current.removeEventListener("timeupdate", handleTimeUpdate);
+      }
+    };
+
+    audio.current.addEventListener("timeupdate", handleTimeUpdate);
+    audio.current.play();
+  };
+
+  useEffect(() => {
+    if (!audio.current) {
+      audio.current = new Audio(props.src);
+    }
+
+    return () => {
+      if (audio.current) {
+        audio.current.pause();
+        audio.current.removeEventListener("timeupdate", () => {});
+        audio.current = null;
+      }
+    };
+  }, [props.src]);
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <div className="text-center mb-3 cursor-pointer">
+          <div
+            className={`${
+              currentTime * 1e7 >= result.offset &&
+              currentTime * 1e7 < result.offset + result.duration
+                ? "underline"
+                : ""
+            } underline-offset-4`}
+          >
+            {WordDisplay}
+          </div>
+          <div className="mb-1">
+            {result.phonemes.map((phoneme, index) => (
+              <span
+                key={index}
+                className={`italic font-code ${scoreColor(
+                  phoneme.pronunciationAssessment.accuracyScore
+                )}`}
+              >
+                {phoneme.phoneme}
+              </span>
+            ))}
+          </div>
+        </div>
+      </PopoverTrigger>
+
+      <PopoverContent align="start" className="bg-muted">
+        <div className="text-sm flex items-center space-x-2 mb-2">
+          <span className="font-serif">{t("score")}:</span>
+          <span className="font-serif">
+            {result.pronunciationAssessment.accuracyScore}
+          </span>
+        </div>
+        <PronunciationAssessmentPhonemeResult result={result} />
+
+        <div className="flex items-center space-x-2">
+          <span className="text-sm">{t("myPronunciation")}:</span>
+          <Button onClick={play} variant="ghost" size="icon">
+            <Volume2Icon className="w-5 h-5" />
+          </Button>
+        </div>
+        {onPlayOrigin && (
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">{t("originalPronunciation")}:</span>
+            <Button onClick={onPlayOrigin} variant="ghost" size="icon">
+              <Volume2Icon className="w-5 h-5" />
+            </Button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 };
 
@@ -185,3 +218,29 @@ const scoreColor = (score: number) => {
 
   return "font-bold text-red-600";
 };
+
+export const PronunciationAssessmentPhonemeResult = memo(
+  (props: { result: PronunciationAssessmentWordResultType }) => {
+    const { result } = props;
+
+    return (
+      <ScrollArea className="w-full">
+        <div className="w-full flex items-center gap-2">
+          {result.phonemes.map((phoneme, index) => (
+            <div key={index} className="text-sm text-center">
+              <div className="font-bold font-code">{phoneme.phoneme}</div>
+              <div
+                className={`text-xs font-serif ${scoreColor(
+                  phoneme.pronunciationAssessment.accuracyScore
+                )}`}
+              >
+                {phoneme.pronunciationAssessment.accuracyScore}
+              </div>
+            </div>
+          ))}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    );
+  }
+);

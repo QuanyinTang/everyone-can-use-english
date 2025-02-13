@@ -1,10 +1,6 @@
 import { t } from "i18next";
-import {
-  Button,
-} from "@renderer/components/ui";
-import {
-  AppSettingsProviderContext,
-} from "@renderer/context";
+import { Button } from "@renderer/components/ui";
+import { AppSettingsProviderContext } from "@renderer/context";
 import { useContext } from "react";
 import { InfoIcon } from "lucide-react";
 
@@ -17,18 +13,16 @@ export const LibrarySettings = () => {
     });
 
     if (filePaths) {
-      EnjoyApp.settings.setLibrary(filePaths[0]);
-      const _library = await EnjoyApp.settings.getLibrary();
+      EnjoyApp.appSettings.setLibrary(filePaths[0]);
+      const _library = await EnjoyApp.appSettings.getLibrary();
       if (_library !== libraryPath) {
         EnjoyApp.app.relaunch();
       }
     }
   };
 
-  const openLibraryPath = async () => {
-    if (libraryPath) {
-      await EnjoyApp.shell.openPath(libraryPath);
-    }
+  const openLibraryDir = () => {
+    EnjoyApp.shell.openPath(libraryPath);
   };
 
   return (
@@ -40,7 +34,7 @@ export const LibrarySettings = () => {
 
       <div className="">
         <div className="flex items-center justify-end space-x-2 mb-2">
-          <Button variant="secondary" size="sm" onClick={openLibraryPath}>
+          <Button variant="secondary" size="sm" onClick={openLibraryDir}>
             {t("open")}
           </Button>
           <Button
