@@ -21,9 +21,8 @@ import settings from "@main/settings";
 import OpenAI, { type ClientOptions } from "openai";
 import { t } from "i18next";
 import { hashFile } from "@main/utils";
-import { Audio, Message } from "@main/db/models";
-import log from "electron-log/main";
-import { WEB_API_URL } from "@/constants";
+import { Audio, Document, Message, UserSetting } from "@main/db/models";
+import log from "@main/logger";
 import proxyAgent from "@main/proxy-agent";
 
 const logger = log.scope("db/models/speech");
@@ -56,10 +55,13 @@ export class Speech extends Model<Speech> {
   sourceType: string;
 
   @Column(DataType.VIRTUAL)
-  source: Message;
+  source: Message | Document;
 
   @BelongsTo(() => Message, { foreignKey: "sourceId", constraints: false })
   message: Message;
+
+  @BelongsTo(() => Document, { foreignKey: "sourceId", constraints: false })
+  document: Document;
 
   @HasOne(() => Audio, "md5")
   audio: Audio;
@@ -67,6 +69,14 @@ export class Speech extends Model<Speech> {
   @AllowNull(false)
   @Column(DataType.TEXT)
   text: string;
+
+  @AllowNull(true)
+  @Column(DataType.INTEGER)
+  section: number;
+
+  @AllowNull(true)
+  @Column(DataType.INTEGER)
+  segment: number;
 
   @AllowNull(false)
   @Column(DataType.JSON)
@@ -105,6 +115,11 @@ export class Speech extends Model<Speech> {
   }
 
   @Column(DataType.VIRTUAL)
+  get filename(): string {
+    return this.getDataValue("md5") + this.getDataValue("extname");
+  }
+
+  @Column(DataType.VIRTUAL)
   get filePath(): string {
     return path.join(
       settings.userDataPath(),
@@ -118,11 +133,18 @@ export class Speech extends Model<Speech> {
     if (!Array.isArray(findResult)) findResult = [findResult];
 
     for (const instance of findResult) {
+      if (!instance) continue;
       if (instance.sourceType === "Message" && instance.message !== undefined) {
         instance.source = instance.message;
+      } else if (
+        instance.sourceType === "Document" &&
+        instance.document !== undefined
+      ) {
+        instance.source = instance.document;
       }
       // To prevent mistakes:
       delete instance.dataValues.message;
+      delete instance.dataValues.document;
     }
   }
 
@@ -175,8 +197,8 @@ export class Speech extends Model<Speech> {
     let openaiConfig: ClientOptions = {};
     if (engine === "enjoyai") {
       openaiConfig = {
-        apiKey: settings.getSync("user.accessToken") as string,
-        baseURL: `${process.env.WEB_API_URL || WEB_API_URL}/api/ai`,
+        apiKey: (await UserSetting.accessToken()) as string,
+        baseURL: `${settings.apiUrl()}/api/ai`,
       };
     } else if (engine === "openai") {
       const defaultConfig = settings.getSync("openai") as LlmProviderType;

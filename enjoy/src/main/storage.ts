@@ -1,7 +1,7 @@
 import { STORAGE_WORKER_ENDPOINT } from "@/constants";
 import axios, { AxiosInstance } from "axios";
 import fs from "fs-extra";
-import log from "electron-log/main";
+import log from "@main/logger";
 const logger = log.scope("STORAGE");
 
 const ONE_MINUTE = 1000 * 60; // 1 minute
@@ -29,9 +29,11 @@ class Storage {
     return this.api.get(`/${key}`);
   }
 
-  put(key: string, filePath: string) {
+  put(key: string, filePath: string, contentType?: string) {
     const data = fs.readFileSync(filePath);
-    return this.api.postForm(`/${key}`, data);
+    const form = new FormData();
+    form.append("file", new Blob([data], { type: contentType }), key);
+    return this.api.postForm(`/${key}`, form);
   }
 }
 

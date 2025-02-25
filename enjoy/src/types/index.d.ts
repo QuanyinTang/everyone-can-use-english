@@ -3,22 +3,49 @@
 // whether you're running in development or production).
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
+declare module "foliate-js/view.js";
+declare module "foliate-js/epub.js";
 declare module "compromise-paragraphs";
 
-type SupportedLlmProviderType = "enjoyai" | "openai" | "googleGenerativeAi";
+declare module "segment" {
+  class Segment {
+    useDefault(): void;
+    loadDict(path: string): void;
+    doSegment(
+      text: string,
+      options: { stripPunctuation: boolean }
+    ): Array<{ w: string }>;
+  }
+  export = Segment;
+}
+
+type SupportedLlmProviderType = "enjoyai" | "openai";
 
 type LlmProviderType = {
-  name?: "enjoyai" | "openai" | "googleGenerativeAi";
+  name?: "enjoyai" | "openai";
   key?: string;
   model?: string;
   baseUrl?: string;
+  models?: string;
 };
 
 type DownloadStateType = {
   name: string;
+  isPaused: boolean;
+  canResume: boolean;
   state: "progressing" | "interrupted" | "completed" | "cancelled";
   received: number;
   total: number;
+  speed?: string;
+};
+
+type DecompressTask = {
+  id: string;
+  type: string;
+  title: string;
+  filePath: string;
+  destPath: string;
+  progress?: string;
 };
 
 type NotificationType = {
@@ -27,7 +54,7 @@ type NotificationType = {
 };
 
 type WhisperConfigType = {
-  service: "local" | "azure" | "cloudflare" | "openai";
+  // service: "local" | "azure" | "cloudflare" | "openai";
   availableModels: {
     type: string;
     name: string;
@@ -67,7 +94,7 @@ type WhisperOutputType = {
     translate: boolean;
   };
   result: {
-    languate: string;
+    language: string;
   };
   systeminfo: string;
   transcription: TranscriptionResultSegmentType[];
@@ -75,6 +102,7 @@ type WhisperOutputType = {
 
 type CfWhipserOutputType = {
   text: string;
+  vtt: string;
   words_count: number;
   words: {
     word: string;
@@ -116,6 +144,7 @@ type MeaningType = {
 type PagyResponseType = {
   page: number;
   next: number | null;
+  last: number;
 };
 
 type AudibleBookType = {
@@ -152,4 +181,111 @@ type TedIdeaType = {
 type ProxyConfigType = {
   enabled: boolean;
   url: string;
+};
+
+type VocabularyConfigType = {
+  lookupOnMouseOver: boolean;
+};
+
+type YoutubeVideoType = {
+  title: string;
+  thumbnail: string;
+  videoId: string;
+  duration: string;
+};
+
+type GptEngineSettingType = {
+  name: string;
+  models: {
+    default: string;
+    lookup?: string;
+    translate?: string;
+    analyze?: string;
+    extractStory?: string;
+  };
+  baseUrl?: string;
+  key?: string;
+};
+
+type TtsEngineSettingType = {
+  name: string;
+  model: string;
+  voice: string;
+  language?: string;
+  baseUrl?: string;
+  key?: string;
+};
+
+type PlatformInfo = {
+  platform: string;
+  arch: string;
+  version: string;
+};
+
+type DiskUsageType = {
+  name: string;
+  path: string;
+  size: number;
+}[];
+
+type RecorderConfigType = {
+  autoGainControl: boolean;
+  echoCancellation: boolean;
+  noiseSuppression: boolean;
+  sampleRate: number;
+  sampleSize: number;
+};
+
+type DictType = "dict" | "mdict" | "preset";
+
+type DictItem = {
+  type: DictType;
+  text: string;
+  value: string;
+};
+
+type DictSettingType = {
+  default: string;
+  removing: string[];
+  mdicts: MDict[];
+};
+
+type TranscribeParamsType = {
+  mediaSrc: string | Blob;
+  params?: {
+    targetId?: string;
+    targetType?: string;
+    originalText?: string;
+    language: string;
+    service: SttEngineOptionEnum | "upload";
+    isolate?: boolean;
+    align?: boolean;
+  };
+};
+
+type TranscribeResultType = {
+  engine: string;
+  model: string;
+  transcript: string;
+  timeline: TimelineEntry[];
+  originalText?: string;
+  tokenId?: number;
+  url: string;
+};
+
+type EchogardenSttConfigType = {
+  engine: "whisper" | "whisper.cpp";
+  whisper: {
+    model: string;
+    temperature?: number;
+    prompt?: string;
+    encoderProvider?: "cpu" | "dml" | "cuda";
+    decoderProvider?: "cpu" | "dml" | "cuda";
+  };
+  whisperCpp?: {
+    model: string;
+    temperature?: number;
+    prompt?: string;
+    enableGPU?: boolean;
+  };
 };

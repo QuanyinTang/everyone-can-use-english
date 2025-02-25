@@ -73,7 +73,7 @@ python --version
 ### 4. 安装 Jupyterlab Module
 
 ```bash
-python -m pip install jupyterlab 
+python -m pip install jupyterlab
 ```
 
 ### 5. 安装 JupyterLab-Desktop
@@ -209,10 +209,10 @@ Anaconda Navigator 提示有新版本，点击 No, remind me later 暂不升级�
 
 ![installJL-11](../images/win-installJL-11.png)
 
-> 这个名称随便填啥都可以，只要自己看着顺眼即可；只是**不能**整成**中文或者纯数字** 
+> 这个名称随便填啥都可以，只要自己看着顺眼即可；只是**不能**整成**中文或者纯数字**
 >
 
-在 Packages 选择 **Python 3.11.7** 
+在 Packages 选择 **Python 3.11.7**
 
 点击 Create 创建环境
 
@@ -225,8 +225,6 @@ Anaconda Navigator 提示有新版本，点击 No, remind me later 暂不升级�
 看到下面这样的画面，说明环境创建成功！
 
 ![installJL-13](../images/win-installJL-13.png)
-
-
 
 > 如果一开始你没有更新 Anaconda Navigator 可能会弹出新版本提示，我们同样点击 No, remind me later 暂不升级
 >
@@ -285,7 +283,7 @@ Anaconda Navigator 提示有新版本，点击 No, remind me later 暂不升级�
 在 PowerShell 里，使用以下命令 “以当前路径为工作路径打开 JupyterLab Desktop” ：
 
 ```bash
-jlab . 
+jlab .
 ```
 
 注意，用 PowerShell 里用 `jlab` 命令打开 JupyterLab-Desktop 的时候，PowerShell 窗口不能关闭（可以最小化）。
@@ -293,7 +291,7 @@ jlab .
 使用以下命令 “用 JupyterLab Desktop 打开某个 `.ipynb` 文件”，比如：
 
 ```bash
-jlab sample.ipynb 
+jlab sample.ipynb
 ```
 
 ### 7. 使用 JupyterLab-Desktop 图形界面

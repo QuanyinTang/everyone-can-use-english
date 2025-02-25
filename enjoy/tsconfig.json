@@ -1,23 +1,24 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "ESNext",
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "jsx": "react-jsx",
     "noImplicitAny": true,
     "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"],
       "@renderer/*": ["./src/renderer/*"],
       "@main/*": ["./src/main/*"],
       "@commands": ["./src/commands"]
     },
+    "types": ["vite/client"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "useDefineForClassFields": false

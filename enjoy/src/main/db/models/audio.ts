@@ -2,7 +2,6 @@ import {
   AfterCreate,
   AfterUpdate,
   AfterDestroy,
-  BeforeCreate,
   BelongsTo,
   Table,
   Column,
@@ -14,22 +13,27 @@ import {
   DataType,
   Unique,
 } from "sequelize-typescript";
-import { Recording, Speech, Transcription, Video } from "@main/db/models";
+import {
+  Recording,
+  Speech,
+  Transcription,
+  UserSetting,
+  Video,
+} from "@main/db/models";
 import settings from "@main/settings";
-import { AudioFormats, VideoFormats, WEB_API_URL } from "@/constants";
+import { AudioFormats, MIME_TYPES, VideoFormats } from "@/constants";
 import { hashFile } from "@main/utils";
 import path from "path";
 import fs from "fs-extra";
 import { t } from "i18next";
 import mainWindow from "@main/window";
-import log from "electron-log/main";
+import log from "@main/logger";
 import storage from "@main/storage";
 import Ffmpeg from "@main/ffmpeg";
 import { Client } from "@/api";
 import startCase from "lodash/startCase";
 import { v5 as uuidv5 } from "uuid";
-
-const SIZE_LIMIT = 1024 * 1024 * 50; // 50MB
+import FfmpegWrapper from "@main/ffmpeg";
 
 const logger = log.scope("db/models/audio");
 
@@ -44,6 +48,9 @@ export class Audio extends Model<Audio> {
   @Default(DataType.UUIDV4)
   @Column({ primaryKey: true, type: DataType.UUID })
   id: string;
+
+  @Column(DataType.STRING)
+  language: string;
 
   @Column(DataType.STRING)
   source: string;
@@ -78,7 +85,10 @@ export class Audio extends Model<Audio> {
   })
   transcription: Transcription;
 
-  @BelongsTo(() => Speech, "md5")
+  @BelongsTo(() => Speech, {
+    foreignKey: "md5",
+    constraints: false,
+  })
   speech: Speech;
 
   @Default(0)
@@ -117,11 +127,21 @@ export class Audio extends Model<Audio> {
 
   @Column(DataType.VIRTUAL)
   get src(): string {
-    return `enjoy://${path.posix.join(
-      "library",
-      "audios",
-      this.getDataValue("md5") + this.extname
-    )}`;
+    if (this.compressedFilePath) {
+      return `enjoy://${path.posix.join(
+        "library",
+        "audios",
+        this.getDataValue("md5") + ".compressed.mp3"
+      )}`;
+    } else if (this.originalFilePath) {
+      return `enjoy://${path.posix.join(
+        "library",
+        "audios",
+        this.getDataValue("md5") + this.extname
+      )}`;
+    } else {
+      return null;
+    }
   }
 
   @Column(DataType.VIRTUAL)
@@ -129,27 +149,70 @@ export class Audio extends Model<Audio> {
     return this.getDataValue("metadata").duration;
   }
 
+  @Column(DataType.VIRTUAL)
+  get mediaType(): string {
+    return "Audio";
+  }
+
+  @Column(DataType.VIRTUAL)
+  get filename(): string {
+    return this.getDataValue("md5") + this.extname;
+  }
+
+  get mimeType(): string {
+    if (this.metadata?.mimeType) {
+      return this.metadata.mimeType;
+    }
+
+    return MIME_TYPES[this.extname.toLowerCase()] || "audio/mpeg";
+  }
+
   get extname(): string {
     return (
-      this.getDataValue("metadata").extname ||
-      path.extname(this.getDataValue("source")) ||
+      this.getDataValue("metadata")?.extname ||
+      (this.getDataValue("source") &&
+        path.extname(this.getDataValue("source"))) ||
       ""
     );
   }
 
   get filePath(): string {
-    return path.join(
+    return this.compressedFilePath || this.originalFilePath;
+  }
+
+  get originalFilePath(): string {
+    const file = path.join(
       settings.userDataPath(),
       "audios",
       this.getDataValue("md5") + this.extname
     );
+
+    if (fs.existsSync(file)) {
+      return file;
+    } else {
+      return null;
+    }
+  }
+
+  get compressedFilePath(): string {
+    const file = path.join(
+      settings.userDataPath(),
+      "audios",
+      this.getDataValue("md5") + ".compressed.mp3"
+    );
+
+    if (fs.existsSync(file)) {
+      return file;
+    } else {
+      return null;
+    }
   }
 
   async upload(force: boolean = false) {
     if (this.isUploaded && !force) return;
 
     return storage
-      .put(this.md5, this.filePath)
+      .put(this.md5, this.filePath, this.mimeType)
       .then((result) => {
         logger.debug("upload result:", result.data);
         if (result.data.success) {
@@ -168,8 +231,8 @@ export class Audio extends Model<Audio> {
     if (this.isSynced) return;
 
     const webApi = new Client({
-      baseUrl: process.env.WEB_API_URL || WEB_API_URL,
-      accessToken: settings.getSync("user.accessToken") as string,
+      baseUrl: settings.apiUrl(),
+      accessToken: (await UserSetting.accessToken()) as string,
       logger: log.scope("audio/sync"),
     });
 
@@ -179,18 +242,21 @@ export class Audio extends Model<Audio> {
     });
   }
 
-  @BeforeCreate
-  static async setupDefaultAttributes(audio: Audio) {
-    try {
-      const ffmpeg = new Ffmpeg();
-      const fileMetadata = await ffmpeg.generateMetadata(audio.filePath);
-      audio.metadata = Object.assign(audio.metadata || {}, {
-        ...fileMetadata,
-        duration: fileMetadata.format.duration,
-      });
-    } catch (err) {
-      logger.error("failed to generate metadata", err.message);
-    }
+  async crop(params: { startTime: number; endTime: number }) {
+    const { startTime, endTime } = params;
+
+    const ffmpeg = new FfmpegWrapper();
+    const output = path.join(
+      settings.cachePath(),
+      `${this.name}(${startTime.toFixed(2)}s-${endTime.toFixed(2)}).mp3`
+    );
+    await ffmpeg.crop(this.filePath, {
+      startTime,
+      endTime,
+      output,
+    });
+
+    return output;
   }
 
   @AfterCreate
@@ -216,9 +282,17 @@ export class Audio extends Model<Audio> {
   }
 
   @AfterDestroy
-  static cleanupFile(audio: Audio) {
-    fs.remove(audio.filePath);
+  static async cleanupFile(audio: Audio) {
+    if (audio.filePath) {
+      fs.remove(audio.filePath);
+    }
     Recording.destroy({
+      where: {
+        targetId: audio.id,
+        targetType: "Audio",
+      },
+    });
+    Transcription.destroy({
       where: {
         targetId: audio.id,
         targetType: "Audio",
@@ -226,8 +300,8 @@ export class Audio extends Model<Audio> {
     });
 
     const webApi = new Client({
-      baseUrl: process.env.WEB_API_URL || WEB_API_URL,
-      accessToken: settings.getSync("user.accessToken") as string,
+      baseUrl: settings.apiUrl(),
+      accessToken: (await UserSetting.accessToken()) as string,
       logger: log.scope("audio/cleanupFile"),
     });
 
@@ -243,8 +317,10 @@ export class Audio extends Model<Audio> {
       description?: string;
       source?: string;
       coverUrl?: string;
+      compressing?: boolean;
     }
   ): Promise<Audio | Video> {
+    const { compressing = true } = params || {};
     // Check if file exists
     try {
       fs.accessSync(filePath, fs.constants.R_OK);
@@ -253,16 +329,11 @@ export class Audio extends Model<Audio> {
     }
 
     // Check if file format is supported
-    const extname = path.extname(filePath);
+    const extname = path.extname(filePath).toLocaleLowerCase();
     if (VideoFormats.includes(extname.split(".").pop() as string)) {
       return Video.buildFromLocalFile(filePath, params);
     } else if (!AudioFormats.includes(extname.split(".").pop() as string)) {
       throw new Error(t("models.audio.fileNotSupported", { file: filePath }));
-    }
-
-    const stats = fs.statSync(filePath);
-    if (stats.size > SIZE_LIMIT) {
-      throw new Error(t("models.audio.fileTooLarge", { file: filePath }));
     }
 
     const md5 = await hashFile(filePath, { algo: "md5" });
@@ -273,8 +344,11 @@ export class Audio extends Model<Audio> {
         md5,
       },
     });
-    if (existing) {
-      throw new Error(t("audioAlreadyAddedToLibrary", { file: filePath }));
+    if (!!existing) {
+      logger.warn("Audio already exists:", existing.id, existing.name);
+      existing.changed("updatedAt", true);
+      existing.update({ updatedAt: new Date() });
+      return existing;
     }
 
     // Generate ID
@@ -283,15 +357,35 @@ export class Audio extends Model<Audio> {
     logger.debug("Generated ID:", id);
 
     const destDir = path.join(settings.userDataPath(), "audios");
-    const destFile = path.join(destDir, `${md5}${extname}`);
+    const destFile = path.join(
+      destDir,
+      compressing ? `${md5}.compressed.mp3` : `${md5}${extname}`
+    );
+
+    let metadata = {
+      extname,
+    };
 
     // Copy file to library
     try {
       // Create directory if not exists
       fs.ensureDirSync(destDir);
 
-      // Copy file
-      fs.copySync(filePath, destFile);
+      // Generate metadata
+      const ffmpeg = new Ffmpeg();
+      const fileMetadata = await ffmpeg.generateMetadata(filePath);
+      metadata = Object.assign(metadata, {
+        ...fileMetadata,
+        duration: fileMetadata.format.duration,
+      });
+
+      if (compressing) {
+        // Compress file
+        await ffmpeg.compressAudio(filePath, destFile);
+      } else {
+        // Copy file
+        fs.copyFileSync(filePath, destFile);
+      }
 
       // Check if file copied
       fs.accessSync(destFile, fs.constants.R_OK);
@@ -312,13 +406,11 @@ export class Audio extends Model<Audio> {
       name,
       description,
       coverUrl,
-      metadata: {
-        extname,
-      },
+      metadata,
     });
 
     return record.save().catch((err) => {
-      logger.error(err);
+      logger.error(err.message);
       // Remove copied file
       fs.removeSync(destFile);
       throw err;

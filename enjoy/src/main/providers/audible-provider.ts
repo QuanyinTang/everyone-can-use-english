@@ -1,6 +1,6 @@
-import log from "electron-log/main";
-import $ from "cheerio";
-import { BrowserView, ipcMain } from "electron";
+import log from "@main/logger";
+import * as cheerio from "cheerio";
+import { WebContentsView, ipcMain } from "electron";
 
 const logger = log.scope("providers/audible-provider");
 
@@ -13,26 +13,31 @@ export class AudibleProvider {
 
   scrape = async (path: string) => {
     logger.debug(`Scraping ${this.baseURL + path}`);
-    return new Promise<string>((resolve, reject) => {
-      const view = new BrowserView();
+    return new Promise<string>((resolve, _reject) => {
+      const view = new WebContentsView();
       view.webContents.loadURL(this.baseURL + path);
-      view.webContents.on("did-finish-load", () => {
-        logger.debug(`Scraped ${this.baseURL + path}`);
+      view.webContents.on("did-stop-loading", () => {
+        logger.debug(`Finish loading ${this.baseURL + path}`);
         view.webContents
           .executeJavaScript(`document.documentElement.innerHTML`)
-          .then((html) => resolve(html as string));
-      });
-      view.webContents.on("did-fail-load", () => {
-        logger.error(`Failed to scrape ${this.baseURL + path}`);
-        reject();
+          .then((html) => {
+            resolve(html as string);
+          })
+          .catch((err) => {
+            resolve("");
+          })
+          .finally(() => view.webContents.close());
       });
     });
   };
 
   extractCategories = async (html: string) => {
-    const categories: { id: number; label: string }[] = [];
+    if (!html) return [];
 
-    $.load(html)(".leftSlot a.refinementFormLink").each((_, el) => {
+    const categories: { id: number; label: string }[] = [];
+    const $ = cheerio.load(html);
+
+    $(".leftSlot a.refinementFormLink").each((_, el) => {
       const id = new URLSearchParams(
         $(el).attr("href")?.split("?")?.pop() ?? ""
       ).get("searchCategory");
@@ -47,9 +52,12 @@ export class AudibleProvider {
   };
 
   extractAudios = async (html: string) => {
-    const books: AudibleBookType[] = [];
+    if (!html) return { books: [], hasNextPage: false };
 
-    $.load(html)("li.bc-list-item.productListItem").each((_, el) => {
+    const books: AudibleBookType[] = [];
+    const $ = cheerio.load(html);
+
+    $("li.bc-list-item.productListItem").each((_, el) => {
       const cover = $(el).find("img").attr("src");
       const title = $(el).find("h3.bc-heading a.bc-link").text()?.trim();
       const href = $(el).find("h3.bc-heading a.bc-link").attr("href");
@@ -78,7 +86,7 @@ export class AudibleProvider {
     });
 
     const hasNextPage =
-      $.load(html)(".nextButton a").attr("aria-disabled") !== "true";
+      cheerio.load(html)(".nextButton a").attr("aria-disabled") !== "true";
 
     return {
       books,
@@ -114,19 +122,11 @@ export class AudibleProvider {
 
   registerIpcHandlers = () => {
     ipcMain.handle("audible-provider-categories", async () => {
-      try {
-        return await this.categories();
-      } catch (error) {
-        logger.error(error);
-      }
+      return await this.categories();
     });
 
     ipcMain.handle("audible-provider-bestsellers", async (_, params) => {
-      try {
-        return await this.bestsellers(params);
-      } catch (error) {
-        logger.error(error);
-      }
+      return await this.bestsellers(params);
     });
   };
 }

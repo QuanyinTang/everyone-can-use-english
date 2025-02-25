@@ -4,15 +4,19 @@ type RecordingType = {
   target?: AudioType | (MessageType & any);
   targetId: string;
   targetType: string;
+  language?: string;
   pronunciationAssessment?: PronunciationAssessmentType & any;
   referenceId: number;
   referenceText?: string;
   duration?: number;
   src?: string;
   md5: string;
+  isDeleted?: boolean;
+  isSynced?: boolean;
   uploadedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 };
 
 type SegementRecordingStatsType = {
@@ -22,4 +26,7 @@ type SegementRecordingStatsType = {
   referenceText?: string;
   count: number;
   duration: number;
+  pronunciationAssessment?: {
+    pronunciationScore: number;
+  };
 }[];

@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+
+const defaultTheme = require("tailwindcss/defaultTheme");
 module.exports = {
   darkMode: ["class"],
   content: ["./src/renderer/**/*.{ts,tsx}"],
@@ -11,10 +13,24 @@ module.exports = {
       },
     },
     extend: {
+      height: {
+        content: "calc(100vh - 2rem)",
+      },
+      maxHeight: {
+        content: "calc(100vh - 2rem)",
+      },
+      fontSize: {
+        xxs: "0.625rem",
+        xxxs: "0.5rem",
+      },
+      fontFamily: {
+        code: ["CharisSIL", ...defaultTheme.fontFamily.mono],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        "active-word": "hsl(var(--active-word))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -70,6 +86,7 @@ module.exports = {
   plugins: [
     require("tailwindcss-animate"),
     require("@tailwindcss/typography"),
+    require("tailwind-scrollbar"),
     require("tailwind-scrollbar-hide"),
     require("@vidstack/react/tailwind.cjs"),
   ],

@@ -1,9 +1,12 @@
 <script setup>
-import DefaultTheme from 'vitepress/theme'
-import SpeakWordInlineConverter from '../components/SpeakWordInlineConverter.vue'
+import DefaultTheme from "vitepress/theme";
+import SpeakWordInlineConverter from "../components/SpeakWordInlineConverter.vue";
+import ThemedImageSwitch from "../components/ThemedImageSwitch.vue";
+import { register } from "swiper/element/bundle";
 
-const { Layout } = DefaultTheme
+const { Layout } = DefaultTheme;
 
+register();
 </script>
 
 <template>
@@ -11,6 +14,7 @@ const { Layout } = DefaultTheme
     <template #doc-after>
       <ClientOnly>
         <SpeakWordInlineConverter />
+        <ThemedImageSwitch />
       </ClientOnly>
     </template>
   </Layout>
@@ -22,31 +26,5 @@ const { Layout } = DefaultTheme
   display: inline-block;
   margin: 0px;
   vertical-align: middle;
-}
-.speak-word.inline {
-  border: none;
-  display: flex;
-  padding: 0;
-  .word {
-    display: inline-block;
-  }
-  .ctrl-part {
-    .play-button {
-      display: flex;
-      width: 24px;
-      height: 24px;
-      align-items: center;
-      justify-content: center;
-      .icon {
-        width: 16px;
-        height: 16px;
-      }
-    }
-    .accent-label {
-      font-size: 14px;
-      display: inline-block;
-      color: white;
-    }
-  }
 }
 </style>

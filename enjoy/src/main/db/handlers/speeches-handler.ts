@@ -4,14 +4,29 @@ import fs from "fs-extra";
 import path from "path";
 import settings from "@main/settings";
 import { hashFile } from "@main/utils";
+import { Attributes, WhereOptions } from "sequelize";
 
 class SpeechesHandler {
+  private async findOne(
+    _event: IpcMainEvent,
+    where: WhereOptions<Attributes<Speech>>
+  ) {
+    const speech = await Speech.findOne({ where });
+    if (!speech) {
+      return null;
+    }
+
+    return speech.toJSON();
+  }
+
   private async create(
     event: IpcMainEvent,
     params: {
       sourceId: string;
       sourceType: string;
       text: string;
+      section?: number;
+      segment?: number;
       configuration: {
         engine: string;
         model: string;
@@ -42,8 +57,20 @@ class SpeechesHandler {
       });
   }
 
+  private async delete(event: IpcMainEvent, id: string) {
+    await Speech.destroy({ where: { id } });
+  }
+
   register() {
+    ipcMain.handle("speeches-find-one", this.findOne);
     ipcMain.handle("speeches-create", this.create);
+    ipcMain.handle("speeches-delete", this.delete);
+  }
+
+  unregister() {
+    ipcMain.removeHandler("speeches-find-one");
+    ipcMain.removeHandler("speeches-create");
+    ipcMain.removeHandler("speeches-delete");
   }
 }
 

@@ -58,7 +58,8 @@ export const AudibleBooksSegment = () => {
 
     EnjoyApp.providers.audible
       .bestsellers()
-      .then(({ books }) => {
+      .then((res) => {
+        const { books = [] } = res || {};
         const filteredBooks =
           books?.filter((book) => book.language === "English") || [];
 
@@ -106,7 +107,7 @@ export const AudibleBooksSegment = () => {
       </div>
 
       <ScrollArea>
-        <div className="flex items-center space-x-4 pb-4">
+        <div className="flex w-max items-center space-x-4 pb-4">
           {books.map((book) => {
             return (
               <AudioBookCard
@@ -174,7 +175,11 @@ export const AudibleBooksSegment = () => {
               {downloading && (
                 <LoaderIcon className="w-4 h-4 animate-spin mr-2" />
               )}
-              {t("downloadSample")}
+              {downloading
+                ? progress < 100
+                  ? t("downloading")
+                  : t("importing")
+                : t("downloadSample")}
             </Button>
           </DialogFooter>
 

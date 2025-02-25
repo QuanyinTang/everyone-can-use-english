@@ -8,17 +8,11 @@ import {
   Form,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
   Input,
   toast,
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
+  FormDescription,
 } from "@renderer/components/ui";
-import { LLM_PROVIDERS } from "@renderer/components";
 import { AISettingsProviderContext } from "@renderer/context";
 import { useContext, useState } from "react";
 
@@ -28,16 +22,16 @@ export const OpenaiSettings = () => {
 
   const openAiConfigSchema = z.object({
     key: z.string().optional(),
-    model: z.enum(LLM_PROVIDERS.openai.models),
     baseUrl: z.string().optional(),
+    models: z.string().optional(),
   });
 
   const form = useForm<z.infer<typeof openAiConfigSchema>>({
     resolver: zodResolver(openAiConfigSchema),
     values: {
       key: openai?.key,
-      model: openai?.model,
       baseUrl: openai?.baseUrl,
+      models: openai?.models,
     },
   });
 
@@ -55,7 +49,7 @@ export const OpenaiSettings = () => {
         <div className="flex items-start justify-between py-4">
           <div className="">
             <div className="mb-2">Open AI</div>
-            <div className="text-sm text-muted-foreground space-y-1">
+            <div className="text-sm text-muted-foreground space-y-3">
               <FormField
                 control={form.control}
                 name="key"
@@ -66,41 +60,10 @@ export const OpenaiSettings = () => {
                       <Input
                         disabled={!editing}
                         type="password"
+                        placeholder=""
                         value={field.value}
                         onChange={field.onChange}
                       />
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center space-x-2">
-                      <FormLabel className="min-w-max">{t("model")}:</FormLabel>
-                      <Select
-                        disabled={!editing}
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("selectAiModel")} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {(LLM_PROVIDERS.openai.models || []).map(
-                            (option: string) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -112,15 +75,42 @@ export const OpenaiSettings = () => {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center space-x-2">
-                      <FormLabel className="min-w-max">{t("baseUrl")}:</FormLabel>
+                      <FormLabel className="min-w-max">
+                        {t("baseUrl")}:
+                      </FormLabel>
                       <Input
                         disabled={!editing}
                         placeholder={t("leaveEmptyToUseDefault")}
-                        defaultValue=""
                         value={field.value}
                         onChange={field.onChange}
                       />
                     </div>
+                    <FormDescription>
+                      {t("openaiBaseUrlDescription")}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="models"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center space-x-2">
+                      <FormLabel className="min-w-max">
+                        {t("customModels")}:
+                      </FormLabel>
+                      <Input
+                        disabled={!editing}
+                        placeholder={t("leaveEmptyToUseDefault")}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </div>
+                    <FormDescription>
+                      {t("customModelsDescription")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

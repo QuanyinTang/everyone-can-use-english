@@ -4,13 +4,11 @@ import Calendar, {
   Skeleton,
   ThemeInput,
 } from "react-activity-calendar";
-import { AppSettingsProviderContext } from "@renderer/context";
+import { AppSettingsProviderContext, useTheme } from "@renderer/context";
 import { ScrollArea, Button } from "@renderer/components/ui";
-import i18next, { t } from "i18next";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/en";
-import "dayjs/locale/zh-cn";
-import localeData from "dayjs/plugin/localeData";
+import { t } from "i18next";
+import dayjs from "@renderer/lib/dayjs";
+import { Dayjs } from "dayjs";
 import { Tooltip } from "react-tooltip";
 
 const DEFAULT_THEME: ThemeInput = {
@@ -22,9 +20,7 @@ export const RecordingCalendar = (props: {
   onSelectRange?: (from: string, to: string) => void;
 }) => {
   const { onSelectRange } = props;
-
-  dayjs.extend(localeData);
-  dayjs.locale(i18next.resolvedLanguage?.toLowerCase() || "en");
+  const { colorScheme } = useTheme();
 
   const [tab, setTab] = useState<string | number>("lastYear");
   const [range, setRange] = useState<[Dayjs, Dayjs]>([
@@ -49,7 +45,7 @@ export const RecordingCalendar = (props: {
         value: currentYear,
       },
     ];
-    const startYear = dayjs(user.createdAt).year();
+    const startYear = dayjs(user?.createdAt).year();
 
     for (let i = currentYear - 1; i >= startYear; i--) {
       _tabs.push({
@@ -120,7 +116,7 @@ export const RecordingCalendar = (props: {
   }
 
   return (
-    <div className="mx-auto p-4 rounded-lg border flex justify-between gap-4">
+    <div className="mx-auto p-4 rounded-lg border flex justify-between gap-2">
       <Calendar
         data={stats}
         labels={{
@@ -135,6 +131,7 @@ export const RecordingCalendar = (props: {
           }),
         }}
         theme={DEFAULT_THEME}
+        colorScheme={colorScheme as "light" | "dark"}
         renderBlock={(block, activity) =>
           React.cloneElement(block, {
             ...block.props,
@@ -165,11 +162,12 @@ export const RecordingCalendar = (props: {
           },
         }}
       />
-      <ScrollArea className="w-32 h-36 px-2">
+      <ScrollArea className="max-w-fit h-36">
         {tabs().map((_tab) => (
           <Button
             key={_tab.value}
-            className="w-full justify-start py-1 min-w-max text-xs xl:text-sm 2xl:text-md"
+            size="sm"
+            className="w-full justify-center py-1 px-1 min-w-max text-xs xl:text-sm 2xl:text-md mb-2"
             variant={_tab.value === tab ? "secondary" : "ghost"}
             onClick={() => handleTabChange(_tab.value)}
           >

@@ -1,15 +1,18 @@
 import { t } from "i18next";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PronunciationAssessmentWordResult } from "@renderer/components";
 import { Switch, ScrollArea } from "@renderer/components/ui";
 import { InfoIcon } from "lucide-react";
+import { cn } from "@renderer/lib/utils";
 
 export const PronunciationAssessmentFulltextResult = (props: {
   words: PronunciationAssessmentWordResultType[];
   currentTime?: number;
-  onSeek?: (time: number) => void;
+  src?: string;
+  onPlayOrigin?: (word: string, index: number) => void;
+  className?: string;
 }) => {
-  const { words, currentTime, onSeek } = props;
+  const { words, currentTime, src, onPlayOrigin, className } = props;
   const [errorStats, setErrorStats] = useState({
     mispronunciation: 0,
     omission: 0,
@@ -26,6 +29,11 @@ export const PronunciationAssessmentFulltextResult = (props: {
     missingBreak: true,
     monotone: true,
   });
+
+  const handlePlayOrigin = useCallback((word: string, index: number) => {
+    if (!onPlayOrigin) return;
+    onPlayOrigin(word, index);
+  }, []);
 
   const calErrorStats = () => {
     return {
@@ -55,16 +63,26 @@ export const PronunciationAssessmentFulltextResult = (props: {
   }, []);
 
   return (
-    <ScrollArea className="h-72 py-4 px-8">
+    <ScrollArea className={cn("min-h-72", className)}>
       <div className="flex items-start justify-between space-x-6">
-        <div className="flex-1 py-4">
+        <div className="flex-1 py-4 flex items-center flex-wrap">
           {words.map((result, index: number) => (
             <PronunciationAssessmentWordResult
               key={index}
               result={result}
               errorDisplay={errorDisplay}
               currentTime={currentTime}
-              onSeek={onSeek}
+              src={src}
+              onPlayOrigin={() => {
+                // if (!onPlayOrigin) return;
+
+                const word = words[index];
+                const candidates = words.filter((w) => w.word === word.word);
+                const wordIndex = candidates.findIndex(
+                  (w) => w.offset === word.offset
+                );
+                handlePlayOrigin(word.word, wordIndex);
+              }}
             />
           ))}
         </div>

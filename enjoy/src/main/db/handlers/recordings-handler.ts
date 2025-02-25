@@ -14,7 +14,12 @@ import {
 } from "sequelize";
 import dayjs from "dayjs";
 import { t } from "i18next";
-import log from "electron-log/main";
+import log from "@main/logger";
+import { NIL as NIL_UUID } from "uuid";
+import FfmpegWrapper from "@main/ffmpeg";
+import path from "path";
+import settings from "@main/settings";
+import { enjoyUrlToPath, pathToEnjoyUrl } from "@main/utils";
 
 const logger = log.scope("db/handlers/recordings-handler");
 
@@ -23,11 +28,12 @@ class RecordingsHandler {
     event: IpcMainEvent,
     options: FindOptions<Attributes<Recording>>
   ) {
-    return Recording.findAll({
-      include: PronunciationAssessment,
-      order: [["createdAt", "DESC"]],
-      ...options,
-    })
+    return Recording.scope("withoutDeleted")
+      .findAll({
+        include: PronunciationAssessment,
+        order: [["createdAt", "DESC"]],
+        ...options,
+      })
       .then((recordings) => {
         if (!recordings) {
           return [];
@@ -42,29 +48,36 @@ class RecordingsHandler {
       });
   }
 
-  private async findOne(event: IpcMainEvent, where: WhereOptions<Recording>) {
-    return Recording.findOne({
+  private async findOne(_event: IpcMainEvent, where: WhereOptions<Recording>) {
+    const recording = await Recording.scope("withoutDeleted").findOne({
+      include: PronunciationAssessment,
+      order: [["createdAt", "DESC"]],
       where: {
         ...where,
       },
-    })
-      .then((recording) => {
-        if (!recording) {
-          throw new Error(t("models.recording.notFound"));
-        }
+    });
+    if (!recording) {
+      throw new Error(t("models.recording.notFound"));
+    }
+    if (!recording.isSynced) {
+      recording.sync().catch(() => {});
+    }
 
-        if (!recording.isSynced) {
-          recording.sync();
-        }
+    return recording.toJSON();
+  }
 
-        return recording.toJSON();
-      })
-      .catch((err) => {
-        event.sender.send("on-notification", {
-          type: "error",
-          message: err.message,
-        });
-      });
+  private async sync(_event: IpcMainEvent, id: string) {
+    const recording = await Recording.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!recording) {
+      throw new Error(t("models.recording.notFound"));
+    }
+
+    return await recording.sync();
   }
 
   private async syncAll(event: IpcMainEvent) {
@@ -79,14 +92,7 @@ class RecordingsHandler {
     });
 
     try {
-      recordings.forEach(async (recording) => {
-        await recording.sync();
-      });
-
-      event.sender.send("on-notification", {
-        type: "info",
-        message: t("allRecordingsSynced"),
-      });
+      await Promise.all(recordings.map((recording) => recording.sync()));
     } catch (err) {
       logger.error("failed to sync recordings", err.message);
 
@@ -98,7 +104,7 @@ class RecordingsHandler {
   }
 
   private async create(
-    event: IpcMainEvent,
+    _event: IpcMainEvent,
     options: Attributes<Recording> & {
       blob: {
         type: string;
@@ -106,102 +112,77 @@ class RecordingsHandler {
       };
     }
   ) {
-    const { targetId, targetType, referenceId, referenceText, duration } =
-      options;
-    return Recording.createFromBlob(options.blob, {
+    const {
+      targetId = NIL_UUID,
+      targetType = "None",
+      referenceId,
+      referenceText,
+      duration,
+    } = options;
+    const recording = await Recording.createFromBlob(options.blob, {
       targetId,
       targetType,
       referenceId,
       referenceText,
       duration,
-    })
-      .then((recording) => {
-        if (!recording) {
-          throw new Error(t("models.recording.failedToSave"));
-        }
-        return recording.toJSON();
-      })
-      .catch((err) => {
-        event.sender.send("on-notification", {
-          type: "error",
-          message: err.message,
-        });
-      });
+    });
+    if (!recording) {
+      throw new Error(t("models.recording.failedToSave"));
+    }
+    return recording.toJSON();
   }
 
-  private async destroy(event: IpcMainEvent, id: string) {
-    const recording = await Recording.findOne({
+  private async destroy(_event: IpcMainEvent, id: string) {
+    const recording = await Recording.scope("withoutDeleted").findOne({
       where: {
         id,
       },
     });
 
     if (!recording) {
-      event.sender.send("on-notification", {
-        type: "error",
-        message: t("models.recording.notFound"),
-      });
+      throw new Error(t("models.recording.notFound"));
     }
-    return recording.destroy().catch((err) => {
-      event.sender.send("on-notification", {
-        type: "error",
-        message: err.message,
-      });
-    });
+
+    await recording.softDelete();
   }
 
-  private async upload(event: IpcMainEvent, id: string) {
-    const recording = await Recording.findOne({
+  private async destroyBulk(
+    _event: IpcMainEvent,
+    where: WhereOptions<Recording> & { ids: string[] }
+  ) {
+    if (where.ids) {
+      where = {
+        ...where,
+        id: {
+          [Op.in]: where.ids,
+        },
+      };
+    }
+    delete where.ids;
+
+    const recordings = await Recording.scope("withoutDeleted").findAll({
+      where,
+    });
+    if (recordings.length === 0) {
+      return;
+    }
+    for (const recording of recordings) {
+      await recording.softDelete();
+    }
+  }
+
+  private async upload(_event: IpcMainEvent, id: string) {
+    const recording = await Recording.scope("withoutDeleted").findOne({
       where: {
         id,
       },
     });
 
     if (!recording) {
-      event.sender.send("on-notification", {
-        type: "error",
-        message: t("models.recording.notFound"),
-      });
+      throw new Error(t("models.recording.notFound"));
     }
 
-    recording
-      .upload()
-      .then((res) => {
-        return res;
-      })
-      .catch((err) => {
-        event.sender.send("on-notification", {
-          type: "error",
-          message: err.message,
-        });
-      });
-  }
-
-  private async assess(event: IpcMainEvent, id: string) {
-    const recording = await Recording.findOne({
-      where: {
-        id,
-      },
-    });
-
-    if (!recording) {
-      event.sender.send("on-notification", {
-        type: "error",
-        message: t("models.recording.notFound"),
-      });
-    }
-
-    return recording
-      .assess()
-      .then((res) => {
-        return res;
-      })
-      .catch((err) => {
-        event.sender.send("on-notification", {
-          type: "error",
-          message: err.message,
-        });
-      });
+    return await recording.upload();
   }
 
   private async stats(
@@ -333,6 +314,17 @@ class RecordingsHandler {
         targetId,
         targetType,
       },
+      include: [
+        {
+          model: PronunciationAssessment,
+          attributes: [
+            [
+              Sequelize.fn("MAX", Sequelize.col("pronunciation_score")),
+              "pronunciationScore",
+            ],
+          ],
+        },
+      ],
       attributes: [
         "targetId",
         "targetType",
@@ -358,18 +350,132 @@ class RecordingsHandler {
       });
   }
 
+  private async statsForDeleteBulk() {
+    // all recordings
+    const recordings = await Recording.scope("withoutDeleted").findAll({
+      include: PronunciationAssessment,
+      order: [["createdAt", "DESC"]],
+    });
+    // no assessment
+    const noAssessment = recordings.filter((r) => !r.pronunciationAssessment);
+    // score less than 90
+    const scoreLessThan90 = recordings.filter(
+      (r) =>
+        !r.pronunciationAssessment ||
+        r.pronunciationAssessment?.pronunciationScore < 90
+    );
+    // score less than 80
+    const scoreLessThan80 = recordings.filter(
+      (r) =>
+        !r.pronunciationAssessment ||
+        r.pronunciationAssessment?.pronunciationScore < 80
+    );
+
+    return {
+      noAssessment: noAssessment.map((r) => r.id),
+      scoreLessThan90: scoreLessThan90.map((r) => r.id),
+      scoreLessThan80: scoreLessThan80.map((r) => r.id),
+      all: recordings.map((r) => r.id),
+    };
+  }
+
+  // Select the highest score of the recordings of each referenceId from the
+  // recordings of the target and export as a single file.
+  private async export(
+    _event: IpcMainEvent,
+    targetId: string,
+    targetType: string
+  ) {
+    let target: Audio | Video;
+    if (targetType === "Audio") {
+      target = await Audio.findOne({
+        where: {
+          id: targetId,
+        },
+      });
+    } else {
+      target = await Video.findOne({
+        where: {
+          id: targetId,
+        },
+      });
+    }
+
+    if (!target) {
+      throw new Error(t("models.recording.notFound"));
+    }
+
+    // query all recordings of the target
+    const recordings = await Recording.scope("withoutDeleted").findAll({
+      where: {
+        targetId,
+        targetType,
+      },
+      include: [
+        {
+          model: PronunciationAssessment,
+          attributes: [
+            [
+              Sequelize.fn("MAX", Sequelize.col("pronunciation_score")),
+              "pronunciationScore",
+            ],
+          ],
+        },
+      ],
+      group: ["referenceId"],
+      order: [["referenceId", "ASC"]],
+    });
+
+    if (!recordings || recordings.length === 0) {
+      throw new Error(t("models.recording.notFound"));
+    }
+
+    // export the recordings to a single file
+    // using ffmpeg concat
+    const ffmpeg = new FfmpegWrapper();
+    const outputFilePath = path.join(
+      settings.cachePath(),
+      `${targetType}-${target.id}.mp3`
+    );
+    const inputFiles = recordings.map((recording) =>
+      enjoyUrlToPath(recording.src)
+    );
+    await ffmpeg.concat(inputFiles, outputFilePath);
+    return pathToEnjoyUrl(outputFilePath);
+  }
+
   register() {
     ipcMain.handle("recordings-find-all", this.findAll);
     ipcMain.handle("recordings-find-one", this.findOne);
+    ipcMain.handle("recordings-sync", this.sync);
     ipcMain.handle("recordings-sync-all", this.syncAll);
     ipcMain.handle("recordings-create", this.create);
     ipcMain.handle("recordings-destroy", this.destroy);
+    ipcMain.handle("recordings-destroy-bulk", this.destroyBulk);
     ipcMain.handle("recordings-upload", this.upload);
-    ipcMain.handle("recordings-assess", this.assess);
     ipcMain.handle("recordings-stats", this.stats);
     ipcMain.handle("recordings-group-by-date", this.groupByDate);
     ipcMain.handle("recordings-group-by-target", this.groupByTarget);
     ipcMain.handle("recordings-group-by-segment", this.groupBySegment);
+    ipcMain.handle("recordings-stats-for-delete-bulk", this.statsForDeleteBulk);
+    ipcMain.handle("recordings-export", this.export);
+  }
+
+  unregister() {
+    ipcMain.removeHandler("recordings-find-all");
+    ipcMain.removeHandler("recordings-find-one");
+    ipcMain.removeHandler("recordings-sync");
+    ipcMain.removeHandler("recordings-sync-all");
+    ipcMain.removeHandler("recordings-create");
+    ipcMain.removeHandler("recordings-destroy");
+    ipcMain.removeHandler("recordings-destroy-bulk");
+    ipcMain.removeHandler("recordings-upload");
+    ipcMain.removeHandler("recordings-stats");
+    ipcMain.removeHandler("recordings-group-by-date");
+    ipcMain.removeHandler("recordings-group-by-target");
+    ipcMain.removeHandler("recordings-group-by-segment");
+    ipcMain.removeHandler("recordings-stats-for-delete-bulk");
+    ipcMain.removeHandler("recordings-export");
   }
 }
 

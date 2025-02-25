@@ -1,7 +1,7 @@
 import { ipcMain, IpcMainEvent } from "electron";
 import { Conversation, Message } from "@main/db/models";
 import { FindOptions, WhereOptions, Attributes } from "sequelize";
-import log from "electron-log/main";
+import log from "@main/logger";
 import { t } from "i18next";
 
 class ConversationsHandler {
@@ -113,36 +113,14 @@ class ConversationsHandler {
     });
   }
 
-  private async ask(
-    event: IpcMainEvent,
-    id: string,
-    params: {
-      messageId: string;
-      content?: string;
-      file?: string;
-      blob?: {
-        type: string;
-        arrayBuffer: ArrayBuffer;
-      };
-    }
-  ) {
+  private async migrate(_event: IpcMainEvent, id: string) {
     const conversation = await Conversation.findOne({
       where: { id },
     });
     if (!conversation) {
-      event.sender.send("on-notification", {
-        type: "error",
-        message: t("models.conversation.notFound"),
-      });
-      return;
+      throw new Error(t("models.conversation.notFound"));
     }
-
-    return conversation.ask(params).catch((err) => {
-      event.sender.send("on-notification", {
-        type: "error",
-        message: err.message,
-      });
-    });
+    await conversation.migrateToChat();
   }
 
   register() {
@@ -151,7 +129,16 @@ class ConversationsHandler {
     ipcMain.handle("conversations-create", this.create);
     ipcMain.handle("conversations-update", this.update);
     ipcMain.handle("conversations-destroy", this.destroy);
-    ipcMain.handle("conversations-ask", this.ask);
+    ipcMain.handle("conversations-migrate", this.migrate);
+  }
+
+  unregister() {
+    ipcMain.removeHandler("conversations-find-all");
+    ipcMain.removeHandler("conversations-find-one");
+    ipcMain.removeHandler("conversations-create");
+    ipcMain.removeHandler("conversations-update");
+    ipcMain.removeHandler("conversations-destroy");
+    ipcMain.removeHandler("conversations-migrate");
   }
 }
 

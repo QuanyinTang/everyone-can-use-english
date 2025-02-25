@@ -4,7 +4,7 @@ import {
   AppSettingsProviderContext,
 } from "@renderer/context";
 import { Button, ScrollArea, ScrollBar } from "@renderer/components/ui";
-import { VideoCard, AddMediaButton } from "@renderer/components";
+import { VideoCard, MediaAddButton } from "@renderer/components";
 import { t } from "i18next";
 import { Link } from "react-router-dom";
 
@@ -62,11 +62,11 @@ export const VideosSegment = (props: { limit?: number }) => {
 
       {videos.length === 0 ? (
         <div className="flex items-center justify-center h-48 border border-dashed rounded-lg">
-          <AddMediaButton />
+          <MediaAddButton type="Video" />
         </div>
       ) : (
         <ScrollArea>
-          <div className="flex items-center space-x-4 pb-4">
+          <div className="flex w-max items-center space-x-4 pb-4">
             {videos.map((video) => {
               return (
                 <VideoCard className="w-56" key={video.id} video={video} />
